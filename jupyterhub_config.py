@@ -11,7 +11,7 @@ from z2jh import get_config, get_secret
 # at the rate required.
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
-c.JupyterHub.spawner_class = 'kubespawner.KubeSpawner'
+c.JupyterHub.spawner_class = 'kubespawner.KubeProfileSpawner'
 
 # Connect to a proxy running in a different pod
 c.ConfigurableHTTPProxy.api_url = 'http://{}:{}'.format(os.environ['PROXY_API_SERVICE_HOST'], int(os.environ['PROXY_API_SERVICE_PORT']))
@@ -147,13 +147,13 @@ elif auth_type == 'cilogon':
 elif auth_type == 'gitlab':
     from oauthenticator.gitlab import GitLabOAuthenticator
     from tornado import gen
+    import pprint
 
     class GitLabEnvAuthenticator(GitLabOAuthenticator):
 
         @gen.coroutine
         def pre_spawn_start(self, user, spawner):
             auth_state = yield user.get_auth_state()
-            import pprint
             pprint.pprint(auth_state)
             if not auth_state:
                 # user has no auth state
