@@ -212,7 +212,7 @@ c.Authenticator.enable_auth_state = get_config('auth.state.enabled', False)
 
 def generate_user_email(spawner):
     """
-    Used as the EMAIL environment variable
+    Used as the EMAIL, GIT_AUTHOR_EMAIL and GIT_COMMITTER_EMAIL environment variables
     """
     if spawner.environment.get('GITLAB_EMAIL'):
         return spawner.environment.get('GITLAB_EMAIL')
