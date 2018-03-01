@@ -214,21 +214,27 @@ def generate_user_email(spawner):
     """
     Used as the EMAIL environment variable
     """
+    if spawner.environment.get('GITLAB_EMAIL'):
+        return spawner.environment.get('GITLAB_EMAIL')
     return '{username}@{domain}'.format(
         username=spawner.user.name, domain=email_domain
     )
 
-def generate_user_name(spawner):
+def generate_git_user_name(spawner):
     """
     Used as GIT_AUTHOR_NAME and GIT_COMMITTER_NAME environment variables
     """
+    if spawner.environment.get('GITLAB_FULLNAME'):
+        return spawner.environment.get('GITLAB_FULLNAME')
     return spawner.user.name
 
 c.KubeProfileSpawner.environment = {
     'EMAIL': generate_user_email,
     # git requires these committer attributes
-    'GIT_AUTHOR_NAME': generate_user_name,
-    'GIT_COMMITTER_NAME': generate_user_name
+    'GIT_AUTHOR_NAME': generate_git_user_name,
+    'GIT_COMMITTER_NAME': generate_git_user_name,
+    'GIT_AUTHOR_EMAIL': generate_user_email,
+    'GIT_COMMITTER_EMAIL': generate_user_email,
 }
 
 c.KubeProfileSpawner.environment.update(get_config('singleuser.extra-env', {}))
