@@ -33,7 +33,7 @@ RUN pip3 install --no-cache-dir \
          jupyterhub==${JUPYTERHUB_VERSION} \
          -r /tmp/requirements.txt
 
-RUN pip install -e git+https://github.com/gsemet/kubespawner@profile_spawner#egg=kubespawner
+RUN pip3 install -e git+https://github.com/gsemet/kubespawner@profile_spawner#egg=kubespawner
 
 ADD jupyterhub_config.py /srv/jupyterhub_config.py
 
