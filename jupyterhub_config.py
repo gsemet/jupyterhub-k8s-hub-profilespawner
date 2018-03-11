@@ -11,7 +11,7 @@ from z2jh import get_config, get_secret
 # at the rate required.
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
-c.JupyterHub.spawner_class = 'kubespawner.KubeProfileSpawner'
+c.JupyterHub.spawner_class = 'kubespawner.KubeSpawner'
 
 # Connect to a proxy running in a different pod
 c.ConfigurableHTTPProxy.api_url = 'http://{}:{}'.format(os.environ['PROXY_API_SERVICE_HOST'], int(os.environ['PROXY_API_SERVICE_PORT']))
@@ -38,36 +38,36 @@ c.JupyterHub.port = int(os.environ['PROXY_PUBLIC_SERVICE_PORT'])
 # the hub should listen on all interfaces, so the proxy can access it
 c.JupyterHub.hub_ip = '0.0.0.0'
 
-c.KubeProfileSpawner.namespace = os.environ.get('POD_NAMESPACE', 'default')
+c.KubeSpawner.namespace = os.environ.get('POD_NAMESPACE', 'default')
 
-c.KubeProfileSpawner.start_timeout = get_config('singleuser.start-timeout')
+c.KubeSpawner.start_timeout = get_config('singleuser.start-timeout')
 
 # Use env var for this, since we want hub to restart when this changes
-c.KubeProfileSpawner.singleuser_image_spec = os.environ['SINGLEUSER_IMAGE']
+c.KubeSpawner.singleuser_image_spec = os.environ['SINGLEUSER_IMAGE']
 
-c.KubeProfileSpawner.singleuser_extra_labels = get_config('singleuser.extra-labels', {})
+c.KubeSpawner.singleuser_extra_labels = get_config('singleuser.extra-labels', {})
 
-c.KubeProfileSpawner.singleuser_uid = get_config('singleuser.uid')
-c.KubeProfileSpawner.singleuser_fs_gid = get_config('singleuser.fs-gid')
+c.KubeSpawner.singleuser_uid = get_config('singleuser.uid')
+c.KubeSpawner.singleuser_fs_gid = get_config('singleuser.fs-gid')
 
 service_account_name = get_config('singleuser.service-account-name', None)
 if service_account_name:
-    c.KubeProfileSpawner.singleuser_service_account = service_account_name
+    c.KubeSpawner.singleuser_service_account = service_account_name
 
-c.KubeProfileSpawner.singleuser_node_selector = get_config('singleuser.node-selector')
+c.KubeSpawner.singleuser_node_selector = get_config('singleuser.node-selector')
 # Configure dynamically provisioning pvc
 storage_type = get_config('singleuser.storage.type')
 if storage_type == 'dynamic':
-    c.KubeProfileSpawner.pvc_name_template = 'claim-{username}{servername}'
-    c.KubeProfileSpawner.user_storage_pvc_ensure = True
+    c.KubeSpawner.pvc_name_template = 'claim-{username}{servername}'
+    c.KubeSpawner.user_storage_pvc_ensure = True
     storage_class = get_config('singleuser.storage.dynamic.storage-class', None)
     if storage_class:
-        c.KubeProfileSpawner.user_storage_class = storage_class
-    c.KubeProfileSpawner.user_storage_access_modes = ['ReadWriteOnce']
-    c.KubeProfileSpawner.user_storage_capacity = get_config('singleuser.storage.capacity')
+        c.KubeSpawner.user_storage_class = storage_class
+    c.KubeSpawner.user_storage_access_modes = ['ReadWriteOnce']
+    c.KubeSpawner.user_storage_capacity = get_config('singleuser.storage.capacity')
 
     # Add volumes to singleuser pods
-    c.KubeProfileSpawner.volumes = [
+    c.KubeSpawner.volumes = [
         {
             'name': 'volume-{username}{servername}',
             'persistentVolumeClaim': {
@@ -75,7 +75,7 @@ if storage_type == 'dynamic':
             }
         }
     ]
-    c.KubeProfileSpawner.volume_mounts = [
+    c.KubeSpawner.volume_mounts = [
         {
             'mountPath': get_config('singleuser.storage.home_mount_path'),
             'name': 'volume-{username}{servername}'
@@ -83,41 +83,41 @@ if storage_type == 'dynamic':
     ]
 elif storage_type == 'static':
     pvc_claim_name = get_config('singleuser.storage.static.pvc-name')
-    c.KubeProfileSpawner.volumes = [{
+    c.KubeSpawner.volumes = [{
         'name': 'home',
         'persistentVolumeClaim': {
             'claimName': pvc_claim_name
         }
     }]
 
-    c.KubeProfileSpawner.volume_mounts = [{
+    c.KubeSpawner.volume_mounts = [{
         'mountPath': get_config('singleuser.storage.home_mount_path'),
         'name': 'home',
         'subPath': get_config('singleuser.storage.static.sub-path')
     }]
 
-c.KubeProfileSpawner.volumes.extend(get_config('singleuser.storage.extra-volumes', []))
-c.KubeProfileSpawner.volume_mounts.extend(get_config('singleuser.storage.extra-volume-mounts', []))
+c.KubeSpawner.volumes.extend(get_config('singleuser.storage.extra-volumes', []))
+c.KubeSpawner.volume_mounts.extend(get_config('singleuser.storage.extra-volume-mounts', []))
 
 lifecycle_hooks = get_config('singleuser.lifecycle-hooks')
 if lifecycle_hooks:
-    c.KubeProfileSpawner.singleuser_lifecycle_hooks = lifecycle_hooks
+    c.KubeSpawner.singleuser_lifecycle_hooks = lifecycle_hooks
 
 init_containers = get_config('singleuser.init-containers')
 if init_containers:
-    c.KubeProfileSpawner.singleuser_init_containers.extend(init_containers)
+    c.KubeSpawner.singleuser_init_containers.extend(init_containers)
 
 # Gives spawned containers access to the API of the hub
-c.KubeProfileSpawner.hub_connect_ip = os.environ['HUB_SERVICE_HOST']
-c.KubeProfileSpawner.hub_connect_port = int(os.environ['HUB_SERVICE_PORT'])
+c.KubeSpawner.hub_connect_ip = os.environ['HUB_SERVICE_HOST']
+c.KubeSpawner.hub_connect_port = int(os.environ['HUB_SERVICE_PORT'])
 
 c.JupyterHub.hub_connect_ip = os.environ['HUB_SERVICE_HOST']
 c.JupyterHub.hub_connect_port = int(os.environ['HUB_SERVICE_PORT'])
 
-c.KubeProfileSpawner.mem_limit = get_config('singleuser.memory.limit')
-c.KubeProfileSpawner.mem_guarantee = get_config('singleuser.memory.guarantee')
-c.KubeProfileSpawner.cpu_limit = get_config('singleuser.cpu.limit')
-c.KubeProfileSpawner.cpu_guarantee = get_config('singleuser.cpu.guarantee')
+c.KubeSpawner.mem_limit = get_config('singleuser.memory.limit')
+c.KubeSpawner.mem_guarantee = get_config('singleuser.memory.guarantee')
+c.KubeSpawner.cpu_limit = get_config('singleuser.cpu.limit')
+c.KubeSpawner.cpu_guarantee = get_config('singleuser.cpu.guarantee')
 
 # Allow switching authenticators easily
 auth_type = get_config('auth.type')
@@ -228,7 +228,7 @@ def generate_git_user_name(spawner):
         return spawner.environment.get('GITLAB_FULLNAME')
     return spawner.user.name
 
-c.KubeProfileSpawner.environment = {
+c.KubeSpawner.environment = {
     'EMAIL': generate_user_email,
     # git requires these committer attributes
     'GIT_AUTHOR_NAME': generate_git_user_name,
@@ -237,7 +237,7 @@ c.KubeProfileSpawner.environment = {
     'GIT_COMMITTER_EMAIL': generate_user_email,
 }
 
-c.KubeProfileSpawner.environment.update(get_config('singleuser.extra-env', {}))
+c.KubeSpawner.environment.update(get_config('singleuser.extra-env', {}))
 
 # Enable admins to access user servers
 c.JupyterHub.admin_access = get_config('auth.admin.access')
@@ -307,13 +307,13 @@ if not cloud_metadata.get('enabled', False):
         )
     )
 
-    c.KubeProfileSpawner.singleuser_init_containers.append(ip_block_container)
+    c.KubeSpawner.singleuser_init_containers.append(ip_block_container)
 
 scheduler_strategy = get_config('singleuser.scheduler-strategy', 'spread')
 
 if scheduler_strategy == 'pack':
     # FIXME: Support setting affinity directly in KubeSpawner
-    c.KubeProfileSpawner.singleuser_extra_pod_config = {
+    c.KubeSpawner.singleuser_extra_pod_config = {
         'affinity': {
             'podAffinity': {
                 'preferredDuringSchedulingIgnoredDuringExecution': [{
@@ -346,7 +346,7 @@ if scheduler_strategy == 'pack':
     }
 else:
     # Set default to {} so subconfigs can easily update it
-    c.KubeProfileSpawner.singleuser_extra_pod_config = {}
+    c.KubeSpawner.singleuser_extra_pod_config = {}
 
 extra_configs = sorted(glob.glob('/etc/jupyterhub/config/hub.extra-config.*.py'))
 for ec in extra_configs:
